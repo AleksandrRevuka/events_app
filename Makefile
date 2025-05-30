@@ -20,6 +20,14 @@ app-down:
 app-logs:
 	${LOGS} ${APP_CONTAINER} -f
 
+.PHONY: app-shell
+app-shell:
+	${EXEC} ${APP_CONTAINER} bash
+
+.PHONY: app-makemigrations
+app-makemigrations:
+	${EXEC} ${APP_CONTAINER} bash -c "cd /app/event_api && poetry run python manage.py makemigrations"
+
 .PHONY: app-migrate
 app-migrate:
 	${EXEC} ${APP_CONTAINER} bash -c "cd /app/event_api && poetry run python manage.py migrate"

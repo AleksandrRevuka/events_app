@@ -18,14 +18,17 @@ from drf_spectacular.utils import (
 )
 
 
-
 class SignUpView(APIView):
     @extend_schema(
         request=UserCreateSerializer,
-        responses=UserResponseSerializer,
+        responses={
+            201: UserResponseSerializer,
+            400: OpenApiResponse(description="Validation error."),
+        },
         tags=["Users: Authentication"],
         operation_id="user_sign_up",
         summary="User sign up",
+        description="Creates a new user and returns user data.",
     )
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
@@ -37,8 +40,8 @@ class SignUpView(APIView):
 
 
 class TokenResponseSerializer(serializers.Serializer):
-    access = serializers.CharField()
-    refresh = serializers.CharField()
+    access_token = serializers.CharField()
+    refresh_token = serializers.CharField()
 
 
 @extend_schema(
@@ -51,14 +54,20 @@ class TokenResponseSerializer(serializers.Serializer):
     ),
     responses={
         200: OpenApiResponse(
-            response=TokenResponseSerializer,
-            description="Returns JWT access and refresh tokens.",
+            response=inline_serializer(
+                name="LoginResponse",
+                fields={
+                    "access_token": serializers.CharField(),
+                },
+            ),
+            description="Returns JWT access token.",
         ),
         401: OpenApiResponse(description="Invalid credentials."),
     },
     tags=["Users: Authentication"],
     operation_id="user_login",
     summary="User login to get JWT tokens",
+    description="Logs in a user using email and password. Returns a JWT access token.",
 )
 class LoginView(APIView):
     authentication_classes = []
@@ -88,6 +97,7 @@ class LogoutView(APIView):
         tags=["Users: Authentication"],
         operation_id="user_logout",
         summary="User logout",
+        description="Clears the JWT cookie (if any) and logs out the user.",
     )
     def get(self, request):
         response = Response(
@@ -101,10 +111,14 @@ class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        responses=UserResponseSerializer,
+        responses={
+            200: UserResponseSerializer,
+            401: OpenApiResponse(description="Authentication required."),
+        },
         tags=["Users: Profile"],
         operation_id="user_me",
         summary="User information",
+        description="Returns the profile information of the currently authenticated user.",
     )
     def get(self, request):
         serializer = UserResponseSerializer(request.user)
@@ -118,30 +132,46 @@ class UpdateUserView(APIView):
         return get_object_or_404(User, id=id)
 
     @extend_schema(
-        responses=UserResponseSerializer,
+        request=UserUpdateSerializer,
+        responses={
+            200: UserResponseSerializer,
+            400: OpenApiResponse(description="Validation error."),
+            403: OpenApiResponse(description="Not allowed to update another user."),
+            404: OpenApiResponse(description="User not found."),
+        },
         tags=["Users: Profile"],
         operation_id="user_update",
         summary="Update user information",
+        description="Allows the authenticated user to update their own profile.",
     )
     def put(self, request, id):
         user = self.get_object(id)
         if request.user != user:
-            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
-        
+            return Response(
+                {"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN
+            )
+
         serializer = UserUpdateSerializer(user, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
 
     @extend_schema(
-        responses=UserResponseSerializer,
+        responses={
+            204: OpenApiResponse(description="User deleted successfully."),
+            403: OpenApiResponse(description="Not allowed to delete another user."),
+            404: OpenApiResponse(description="User not found."),
+        },
         tags=["Users: Profile"],
         operation_id="user_delete",
         summary="Delete user",
+        description="Allows the authenticated user to delete their own account.",
     )
     def delete(self, request, id):
         user = self.get_object(id)
         if request.user != user:
-            return Response({'detail': 'Not allowed.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN
+            )
         user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

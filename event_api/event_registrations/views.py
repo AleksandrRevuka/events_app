@@ -8,7 +8,7 @@ from .serializers import (
 )
 from events.models import Event
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 
 
 class RegistrationListView(generics.ListAPIView):
@@ -21,7 +21,14 @@ class RegistrationListView(generics.ListAPIView):
     @extend_schema(
         tags=["Event Registrations"],
         summary="Get registrations",
-        responses={200: EventRegistrationResponseSerializer(many=True)},
+        description="Returns a list of event registrations associated with the authenticated user.",
+        operation_id="list_event_registrations",
+        responses={
+            200: EventRegistrationResponseSerializer(many=True),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided or are invalid."
+            ),
+        },
     )
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -33,8 +40,19 @@ class RegistrationCreateView(APIView):
     @extend_schema(
         tags=["Event Registrations"],
         summary="Create new registration",
+        description="Registers the authenticated user for a specific event. Prevents duplicate registrations.",
+        operation_id="create_event_registration",
         request=CreateEventRegistrationSerializer,
-        responses={201: EventRegistrationResponseSerializer},
+        responses={
+            201: EventRegistrationResponseSerializer,
+            400: OpenApiResponse(
+                description="User is already registered for this event or invalid data."
+            ),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided or are invalid."
+            ),
+            404: OpenApiResponse(description="Event not found."),
+        },
     )
     def post(self, request):
         serializer = CreateEventRegistrationSerializer(data=request.data)
@@ -58,9 +76,20 @@ class RegistrationDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     @extend_schema(
-        responses={204: None},
         tags=["Event Registrations"],
         summary="Delete registration",
+        description="Deletes an existing event registration if it belongs to the authenticated user.",
+        operation_id="delete_event_registration",
+        responses={
+            204: OpenApiResponse(description="Registration deleted successfully."),
+            403: OpenApiResponse(
+                description="Permission denied. You cannot delete someone else's registration."
+            ),
+            404: OpenApiResponse(description="Registration not found."),
+            401: OpenApiResponse(
+                description="Authentication credentials were not provided or are invalid."
+            ),
+        },
     )
     def delete(self, request, registration_id):
         registration = get_object_or_404(
