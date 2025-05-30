@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "events.apps.EventsConfig",
     "users.apps.UsersConfig",
+    "event_registrations.apps.EventRegistrationsConfig",
     "rest_framework",
     "drf_spectacular",
 ]
@@ -73,11 +75,11 @@ TEMPLATES = [
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Event API",
-    "DESCRIPTION": "Документація Event API з авторизацією, користувачами тощо.",
+    "DESCRIPTION": "Event API",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,  # Swagger буде доступний лише за /api/docs/
+    "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
-    "SCHEMA_PATH_PREFIX": "/api",  # <<< ВАЖЛИВО: щоб він підхоплював /api/ маршрути
+    "SCHEMA_PATH_PREFIX": "/api",
     "APPEND_COMPONENTS": {},
     "PREPROCESSING_HOOKS": [],
     "POSTPROCESSING_HOOKS": [],
@@ -94,6 +96,15 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # Database
