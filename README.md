@@ -3,17 +3,11 @@
 ## 📝 Overview
 The **Event Management API** is a Django-based backend for managing events and user registrations. It supports full CRUD operations for both events and registrations and is designed for scalable deployment using Docker.
 
----
-
 ## Requirements
+To run the API, ensure you have the following installed:
 
-Ensure you have the following installed:
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- Python 3.12+ (used inside Docker container)
-
----
+- Docker and Docker Compose
+- Python 3.12+
 
 ## Environment Variables
 
