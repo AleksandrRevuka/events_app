@@ -20,7 +20,6 @@ DATABASE_PORT=5432
 DATABASE_USER=your_database_user
 DATABASE_PASSWORD=your_database_password
 DATABASE_NAME=your_database_name
-DATABASE_DIALECT=sqlite  # Options: sqlite or postgresql
 
 SECRET_KEY=your-super-secret-key
 DEBUG=True
