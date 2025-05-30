@@ -15,16 +15,3 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class EventRegistration(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="registrations"
-    )
-    event = models.ForeignKey(
-        Event, on_delete=models.CASCADE, related_name="registrations"
-    )
-
-    def __str__(self):
-        return f"{self.user.email} registered for {self.event.title}"
